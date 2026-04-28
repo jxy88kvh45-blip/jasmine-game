@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Jasmine ❤️</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  overflow:hidden;
+}
+
+/* Start Screen */
+#startScreen, #endScreen{
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  color:white;
+}
+
+button{
+  padding:12px 25px;
+  border:none;
+  border-radius:25px;
+  font-size:18px;
+  margin-top:20px;
+  background:white;
+  color:#ff4b5c;
+  cursor:pointer;
+}
+
+/* Game Area */
+#game{
+  display:none;
+  width:100%;
+  height:100vh;
+  position:relative;
+  overflow:hidden;
+}
+
+#player{
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:40px;
+}
+
+.momo{
+  position:absolute;
+  font-size:30px;
+}
+
+#score{
+  position:absolute;
+  top:10px;
+  left:10px;
+  color:white;
+  font-size:18px;
+}
+
+/* End Screen */
+#endScreen{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Start Screen -->
+<div id="startScreen">
+  <h1>Hey Jasmine ❤️</h1>
+  <p>Catch the momos to unlock a surprise!</p>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<!-- Game -->
+<div id="game">
+  <div id="score">Score: 0</div>
+  <div id="player">🧺</div>
+</div>
+
+<!-- End Screen -->
+<div id="endScreen">
+  <h1>💖 You did it!</h1>
+  <p>Will you go out with me? 😳</p>
+  <button onclick="alert('Yayyy ❤️')">Yes 💕</button>
+  <button onclick="alert('I’ll try again 😅')">No 😜</button>
+</div>
+
+<script>
+let player = document.getElementById("player");
+let game = document.getElementById("game");
+let scoreEl = document.getElementById("score");
+
+let score = 0;
+let gameRunning = false;
+
+/* Start Game */
+function startGame(){
+  document.getElementById("startScreen").style.display = "none";
+  game.style.display = "block";
+  gameRunning = true;
+  spawnMomo();
+}
+
+/* Player Movement (Touch + Mouse) */
+let playerX = window.innerWidth / 2;
+
+function movePlayer(x){
+  playerX = x;
+  if(playerX < 30) playerX = 30;
+  if(playerX > window.innerWidth - 30) playerX = window.innerWidth - 30;
+  player.style.left = playerX + "px";
+}
+
+document.addEventListener("pointermove", (e)=>{
+  if(gameRunning){
+    movePlayer(e.clientX);
+  }
+});
+
+/* Spawn Momos */
+function spawnMomo(){
+  if(!gameRunning) return;
+
+  let momo = document.createElement("div");
+  momo.classList.add("momo");
+  momo.innerText = "🥟";
+
+  let x = Math.random() * window.innerWidth;
+  momo.style.left = x + "px";
+  momo.style.top = "0px";
+
+  game.appendChild(momo);
+
+  let fall = setInterval(()=>{
+    let top = parseInt(momo.style.top);
+    momo.style.top = top + 5 + "px";
+
+    let playerRect = player.getBoundingClientRect();
+    let momoRect = momo.getBoundingClientRect();
+
+    // Collision
+    if(
+      momoRect.bottom > playerRect.top &&
+      momoRect.left < playerRect.right &&
+      momoRect.right > playerRect.left
+    ){
+      score++;
+      scoreEl.innerText = "Score: " + score;
+      momo.remove();
+      clearInterval(fall);
+
+      if(score >= 10){
+        endGame();
+      }
+    }
+
+    // Missed
+    if(top > window.innerHeight){
+      momo.remove();
+      clearInterval(fall);
+    }
+
+  }, 20);
+
+  setTimeout(spawnMomo, 800);
+}
+
+/* End Game */
+function endGame(){
+  gameRunning = false;
+  game.style.display = "none";
+  document.getElementById("endScreen").style.display = "flex";
+}
+</script>
+
+</body>
+</html>
