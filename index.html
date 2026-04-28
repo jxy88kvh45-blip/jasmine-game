@@ -6,181 +6,206 @@
 <title>For Jasmine ❤️</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-body{
-  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
-  overflow:hidden;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  text-align: center;
+  color: #fff;
 }
 
-/* Start Screen */
-#startScreen, #endScreen{
-  position:absolute;
-  width:100%;
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  color:white;
+h1 { font-size: 20px; margin: 10px; }
+p { font-size: 14px; margin: 0; }
+
+#score { margin: 8px; }
+
+#gameArea {
+  position: relative;
+  width: 95vw;
+  height: 60vh;
+  margin: auto;
+  border: 2px solid #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none; /* IMPORTANT */
 }
 
-button{
-  padding:12px 25px;
-  border:none;
-  border-radius:25px;
-  font-size:18px;
-  margin-top:20px;
-  background:white;
-  color:#ff4b5c;
-  cursor:pointer;
+#basket {
+  position: absolute;
+  bottom: 10px;
+  width: 70px;
+  height: 70px;
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-/* Game Area */
-#game{
-  display:none;
-  width:100%;
-  height:100vh;
-  position:relative;
-  overflow:hidden;
+.momo {
+  position: absolute;
+  font-size: 30px;
 }
 
-#player{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:40px;
+button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background: white;
+  color: #ff4d6d;
+  margin-top: 10px;
 }
 
-.momo{
-  position:absolute;
-  font-size:30px;
-}
-
-#score{
-  position:absolute;
-  top:10px;
-  left:10px;
-  color:white;
-  font-size:18px;
-}
-
-/* End Screen */
-#endScreen{
-  display:none;
+/* Proposal */
+#proposalBox {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 </style>
 </head>
 
 <body>
 
-<!-- Start Screen -->
-<div id="startScreen">
-  <h1>Hey Jasmine ❤️</h1>
-  <p>Catch the momos to unlock a surprise!</p>
-  <button onclick="startGame()">Start Game</button>
+<h1>🥟 Jasmine’s Momo Game ❤️</h1>
+<p>Catch 12 momos</p>
+
+<div id="score">Score: 0</div>
+
+<div id="gameArea">
+  <div id="basket">💖</div>
+
+  <div id="proposalBox">
+    <h2>🌸 Jasmine… will you go out with me? 💖</h2>
+    <button onclick="yesClicked()">Yes 💖</button>
+    <button onclick="restartGame()">Play Again 😄</button>
+  </div>
 </div>
 
-<!-- Game -->
-<div id="game">
-  <div id="score">Score: 0</div>
-  <div id="player">🧺</div>
-</div>
-
-<!-- End Screen -->
-<div id="endScreen">
-  <h1>💖 You did it!</h1>
-  <p>Will you go out with me? 😳</p>
-  <button onclick="alert('Yayyy ❤️')">Yes 💕</button>
-  <button onclick="alert('I’ll try again 😅')">No 😜</button>
-</div>
+<button onclick="startGame()">Start Game</button>
 
 <script>
-let player = document.getElementById("player");
-let game = document.getElementById("game");
-let scoreEl = document.getElementById("score");
+let gameArea = document.getElementById("gameArea");
+let basket = document.getElementById("basket");
+let scoreDisplay = document.getElementById("score");
+let proposalBox = document.getElementById("proposalBox");
 
 let score = 0;
 let gameRunning = false;
+let isDragging = false;
 
-/* Start Game */
-function startGame(){
-  document.getElementById("startScreen").style.display = "none";
-  game.style.display = "block";
+/* START GAME */
+function startGame() {
+  score = 0;
   gameRunning = true;
-  spawnMomo();
+  proposalBox.style.display = "none";
+  scoreDisplay.innerText = "Score: 0";
+  dropMomo();
 }
 
-/* Player Movement (Touch + Mouse) */
-let playerX = window.innerWidth / 2;
-
-function movePlayer(x){
-  playerX = x;
-  if(playerX < 30) playerX = 30;
-  if(playerX > window.innerWidth - 30) playerX = window.innerWidth - 30;
-  player.style.left = playerX + "px";
+/* MOVE FUNCTION */
+function moveBasket(e) {
+  let rect = gameArea.getBoundingClientRect();
+  let x = e.clientX - rect.left - basket.offsetWidth / 2;
+  x = Math.max(0, Math.min(x, rect.width - basket.offsetWidth));
+  basket.style.left = x + "px";
 }
 
-document.addEventListener("pointermove", (e)=>{
-  if(gameRunning){
-    movePlayer(e.clientX);
-  }
+/* POINTER EVENTS */
+gameArea.addEventListener("pointerdown", (e) => {
+  isDragging = true;
+  gameArea.setPointerCapture(e.pointerId);
+  moveBasket(e);
 });
 
-/* Spawn Momos */
-function spawnMomo(){
-  if(!gameRunning) return;
+gameArea.addEventListener("pointermove", (e) => {
+  if (!isDragging) return;
+  moveBasket(e);
+});
+
+gameArea.addEventListener("pointerup", () => {
+  isDragging = false;
+});
+
+gameArea.addEventListener("pointercancel", () => {
+  isDragging = false;
+});
+
+/* SAFARI TOUCH BACKUP */
+gameArea.addEventListener("touchstart", (e) => {
+  isDragging = true;
+  moveBasket(e.touches[0]);
+});
+
+gameArea.addEventListener("touchmove", (e) => {
+  if (!isDragging) return;
+  moveBasket(e.touches[0]);
+});
+
+gameArea.addEventListener("touchend", () => {
+  isDragging = false;
+});
+
+/* MOMO DROP */
+function dropMomo() {
+  if (!gameRunning) return;
 
   let momo = document.createElement("div");
-  momo.classList.add("momo");
+  momo.className = "momo";
   momo.innerText = "🥟";
 
-  let x = Math.random() * window.innerWidth;
-  momo.style.left = x + "px";
+  momo.style.left = Math.random() * (gameArea.clientWidth - 30) + "px";
   momo.style.top = "0px";
 
-  game.appendChild(momo);
+  gameArea.appendChild(momo);
 
-  let fall = setInterval(()=>{
-    let top = parseInt(momo.style.top);
-    momo.style.top = top + 5 + "px";
+  let fall = setInterval(() => {
+    let top = parseFloat(momo.style.top);
+    momo.style.top = top + 4 + "px";
 
-    let playerRect = player.getBoundingClientRect();
-    let momoRect = momo.getBoundingClientRect();
+    let b = basket.getBoundingClientRect();
+    let m = momo.getBoundingClientRect();
 
-    // Collision
-    if(
-      momoRect.bottom > playerRect.top &&
-      momoRect.left < playerRect.right &&
-      momoRect.right > playerRect.left
-    ){
+    if (
+      m.bottom >= b.top &&
+      m.left < b.right &&
+      m.right > b.left
+    ) {
       score++;
-      scoreEl.innerText = "Score: " + score;
+      scoreDisplay.innerText = "Score: " + score;
       momo.remove();
       clearInterval(fall);
 
-      if(score >= 10){
-        endGame();
-      }
+      if (score >= 12) endGame();
     }
 
-    // Missed
-    if(top > window.innerHeight){
+    if (top > gameArea.clientHeight) {
       momo.remove();
       clearInterval(fall);
     }
 
   }, 20);
 
-  setTimeout(spawnMomo, 800);
+  setTimeout(dropMomo, 800);
 }
 
-/* End Game */
-function endGame(){
+/* END GAME */
+function endGame() {
   gameRunning = false;
-  game.style.display = "none";
-  document.getElementById("endScreen").style.display = "flex";
+  proposalBox.style.display = "flex";
+}
+
+function yesClicked() {
+  proposalBox.innerHTML = "<h2>🥰 She said YES! ❤️</h2>";
+}
+
+function restartGame() {
+  location.reload();
 }
 </script>
 
